@@ -14,9 +14,22 @@ water.quality <-
 water.quality <- 
   water.quality %>% 
   dplyr::select(-Position)
+# replace "ps" and "pn" into "1" and "0"
+# glm() function accepts integer for 1-0 
+water.quality$depth[water.quality$depth=="ps"] <- 1 
+water.quality$depth[water.quality$depth=="pn"] <- 0
+water.quality$depth <- as.character(water.quality$depth)
+# transform the valuable as numeric
+water.quality$depth <- as.character(water.quality$depth)
+water.quality.scale <- 
+  water.quality %>% 
+  mutate_at(.,vars(3:11), funs((.-mean(.))/sd(.)))
+#
+## --- END ---
 
-# ---- pairs ----
+# ---- pairs.plot ----
 # draw a pair plot
+# original numbers
 pairs.water.quality <- 
   water.quality %>% 
   ggpairs(columns = c(3:11),
@@ -26,34 +39,42 @@ pairs.water.quality <-
           ) 
 print(pairs.water.quality)
 # Save the pair plot
+# When you would like to save the figure,
+# comment out the code below and run.
 # ggsave("pairs.water.quality.png")
 
+#scaled numbers
+pairs.water.quality.scale <- 
+  water.quality.scale %>% 
+  ggpairs(columns = c(3:11),
+          aes(colour = depth, 
+              alpha = 0.5
+          )
+  ) 
+print(pairs.water.quality.scale)
+# Save the pair plot
+# When you would like to save the figure,
+# comment out the code below and run.
+# ggsave("pairs.water.quality.scale.png")
+#
+## --- END ---
+
 # ---- logistic.regression ------
-# replace "ps" and "pn" into "1" and "0"
-# glm() function accepts integer for 1-0 
-water.quality$depth[water.quality$depth=="ps"] <- 1 
-water.quality$depth[water.quality$depth=="pn"] <- 0
-# transform the valuable as numeric
-water.quality$depth <- as.numeric(as.character(water.quality$depth))
-water.quality %>% 
-  (mutate_at(.,vars(3:11), funs((.-mean(.))/sd(.))))
-         
-         
-         oxy ec cod bod nitrate amonium sat nhom)
-
-
 # regression
+water.quality.scale$depth <- as.numeric(as.character(water.quality$depth))
 wq.binomial.01 <- glm(depth ~ ph + cod + bod,
-            data = water.quality,
+            data = water.quality.scale,
             family = binomial
 )
 # show summary table
 summary(wq.binomial.01)
 # Akaike's information criterion
+# AIC:33.52473
 AIC(wq.binomial.01)
+
 # plot the results
 wq.binomial.01.plot <- 
-  ggplot(water.quality, 
+  ggplot(water.quality.scale, 
          aes(x=ph + cod + bod, 
              y=depth)
          ) + 
@@ -63,4 +84,7 @@ wq.binomial.01.plot <-
               se=TRUE
               ) +
   theme_classic()
+print(wq.binomial.01.plot)
 
+#
+## --- END ---
