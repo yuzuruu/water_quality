@@ -1,90 +1,42 @@
-# ---- load.packages ----
+
+
+
 library(tidyverse)
+library(dplyr)
 library(GGally)
-library(viridis)
-library(viridisLite)
 
-# ---- read.data ----
-water.quality <- 
-  readxl::read_excel("waterfactor.xlsx",
-                     sheet = "water.factor.wet",
-                     range = "A01:L31"
-                     )
-# omit unnecessary valuable
-water.quality <- 
-  water.quality %>% 
-  dplyr::select(-Position)
-# replace "ps" and "pn" into "1" and "0"
-# glm() function accepts integer for 1-0 
-water.quality$depth[water.quality$depth=="ps"] <- 1 
-water.quality$depth[water.quality$depth=="pn"] <- 0
-water.quality$depth <- as.character(water.quality$depth)
-# transform the valuable as numeric
-water.quality$depth <- as.character(water.quality$depth)
-water.quality.scale <- 
-  water.quality %>% 
-  mutate_at(.,vars(3:11), funs((.-mean(.))/sd(.)))
-#
-## --- END ---
+rice.bid <- readxl::read_excel("rice_bid_ecosystem_service.xlsx")
 
-# ---- pairs.plot ----
-# draw a pair plot
-# original numbers
-pairs.water.quality <- 
-  water.quality %>% 
-  ggpairs(columns = c(3:11),
-          aes(colour = depth, 
+rice.bid.01 <- 
+  rice.bid %>% 
+  dplyr::mutate(choice = as.factor(choice),
+                bid = as.factor(bid)
+  )
+
+rice.bid.01.pairs.01 <- 
+  rice.bid.01 %>% 
+  ggpairs(columns = 3:ncol(rice.bid.01),
+          aes(colour = choice,
+              alpha = 0.5)
+  )
+rice.bid.01.pairs.02 <- 
+  rice.bid.01 %>% 
+  ggpairs(columns = 3:ncol(rice.bid.01),
+          aes(colour = bid,
               alpha = 0.5
               )
-          ) 
-print(pairs.water.quality)
-# Save the pair plot
-# When you would like to save the figure,
-# comment out the code below and run.
-# ggsave("pairs.water.quality.png")
+  )
 
-#scaled numbers
-pairs.water.quality.scale <- 
-  water.quality.scale %>% 
-  ggpairs(columns = c(3:11),
-          aes(colour = depth, 
-              alpha = 0.5
-          )
-  ) 
-print(pairs.water.quality.scale)
-# Save the pair plot
-# When you would like to save the figure,
-# comment out the code below and run.
-# ggsave("pairs.water.quality.scale.png")
-#
-## --- END ---
-
-# ---- logistic.regression ------
-# regression
-water.quality.scale$depth <- as.numeric(as.character(water.quality$depth))
-wq.binomial.01 <- glm(depth ~ ph + cod + bod,
-            data = water.quality.scale,
-            family = binomial
+ggsave("rice.bid.01.pdf", 
+       plot = rice.bid.01.pairs.01,
+       width = 100,
+       height = 100,
+       units = "cm"
 )
-# show summary table
-summary(wq.binomial.01)
-# Akaike's information criterion
-# AIC:33.52473
-AIC(wq.binomial.01)
 
-# plot the results
-wq.binomial.01.plot <- 
-  ggplot(water.quality.scale, 
-         aes(x=ph + cod + bod, 
-             y=depth)
-         ) + 
-  geom_point() + 
-  stat_smooth(method="glm", 
-              method.args=list(family="binomial"), 
-              se=TRUE
-              ) +
-  theme_classic()
-print(wq.binomial.01.plot)
-
-#
-## --- END ---
+ggsave("rice.bid.02.pdf", 
+       plot = rice.bid.01.pairs.02,
+       width = 100,
+       height = 100,
+       units = "cm"
+)
