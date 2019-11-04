@@ -88,3 +88,47 @@ print(wq.binomial.01.plot)
 
 #
 ## --- END ---
+
+
+# Salinity content by period
+# ---- read.data ----
+salinity.water <- 
+  readxl::read_excel("saliwater.xlsx",
+                     sheet = "sali",
+                     range = "A02:G07"
+  )
+colnames.salinity.water <- colnames(salinity.water)
+
+# ---- rename and reshape data
+salinity.water.data <- 
+  salinity.water %>% 
+  tidyr::gather(key = "month", 
+                value = area, colnames.salinity.water[2:length(colnames.salinity.water)]) %>% 
+  dplyr::rename(salinity = "Salinity content (%0)",
+                month = month,
+                area = area
+                ) %>% 
+  dplyr::mutate(
+    salinity = factor(salinity),
+    month = factor(month)
+  )
+
+# ---- draw a barplot ----
+salinity.water.data %>% 
+  ggplot(aes(x = month, 
+             y = area
+             )
+         ) +
+  geom_bar(aes(fill = salinity),
+           stat = "identity",
+           position = "stack"
+  ) +
+  scale_fill_viridis_d(
+    option = "viridis") +
+  labs(x = "Month", 
+       y = "Area (Unit: ha)"
+       ) +
+  theme_classic()
+
+#
+## --- END ---
